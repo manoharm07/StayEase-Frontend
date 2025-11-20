@@ -3,7 +3,6 @@ import api from "../api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthProvider";
 import { toast } from "sonner";
-
 export default function HostelForm() {
     const [hostel, setHostel] = useState({
         name: "",
@@ -13,25 +12,55 @@ export default function HostelForm() {
         empty_seats: "",
         fees: "",
     });
+
     const navigate = useNavigate();
     const { setUserRole } = useAuth();
-
-
 
     const handleChange = (e) => {
         setHostel({ ...hostel, [e.target.name]: e.target.value });
     };
 
+    const validateForm = () => {
+
+        const capacity = Number(hostel.capacity);
+        const emptySeats = Number(hostel.empty_seats);
+        const fees = Number(hostel.fees);
+
+        if (capacity < 0) {
+            toast.error("Capacity cannot be negative");
+            return false;
+        }
+
+        if (emptySeats < 0) {
+            toast.error("Empty seats cannot be negative");
+            return false;
+        }
+
+        if (fees < 0) {
+            toast.error("Fees cannot be negative");
+            return false;
+        }
+
+        if (!/^\d{10}$/.test(hostel.phone)) {
+            toast.error("Phone number must be exactly 10 digits");
+            return false;
+        }
+
+        return true;
+    };
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            
-            await api.post("/hostel/create",hostel);
-            toast.success("Hostel created successfully!");
-            localStorage.setItem("userRole","USTAFF");
-            setUserRole("USTAFF")
-            navigate("/");
 
+        if (!validateForm()) return;
+
+        try {
+            await api.post("/hostel/create", hostel);
+            toast.success("Hostel created successfully!");
+
+            localStorage.setItem("userRole", "USTAFF");
+            setUserRole("USTAFF");
+
+            navigate("/");
         } catch (error) {
             toast.error("Error in creating hostel!");
             console.error("Error adding hostel:", error);
